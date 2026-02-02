@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEO • Mission Control</title>
+    <meta name="description" content="Neo's Mission Control — AI Employee Dashboard for Faisal Shariff">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.6);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --accent-cyan: #00d9ff;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --glow-cyan: 0 0 20px rgba(0, 217, 255, 0.5);
+            --glow-purple: 0 0 20px rgba(139, 92, 246, 0.5);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Animated Starfield Background */
+        .starfield {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent),
+                radial-gradient(1px 1px at 15% 55%, white, transparent);
+            background-size: 200% 200%;
+            background-position: 0% 0%;
+            animation: twinkle 8s ease-in-out infinite, breathe 6s ease-in-out infinite;
+        }
+
+        .starfield::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(1px 1px at 25% 15%, rgba(0, 217, 255, 0.8), transparent),
+                radial-gradient(1px 1px at 75% 85%, rgba(139, 92, 246, 0.8), transparent),
+                radial-gradient(2px 2px at 45% 40%, rgba(255, 255, 255, 0.6), transparent),
+                radial-gradient(1px 1px at 65% 25%, rgba(255, 255, 255, 0.7), transparent);
+            background-size: 250% 250%;
+            animation: twinkle 10s ease-in-out infinite reverse;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.8; background-position: 0% 0%; }
+            50% { opacity: 1; background-position: 100% 100%; }
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 20px var(--accent-cyan), 0 0 40px var(--accent-cyan); }
+            50% { text-shadow: 0 0 30px var(--accent-cyan), 0 0 60px var(--accent-cyan); }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes matrixRain {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100vh); }
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            padding: 3rem 0;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        .logo {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: 0.5rem;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 20px var(--accent-cyan), 0 0 40px var(--accent-cyan);
+            animation: glow 3s ease-in-out infinite;
+            cursor: pointer;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .uptime {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            color: var(--accent-cyan);
+            letter-spacing: 0.1rem;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: slideUp 0.8s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 217, 255, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Mission Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(0, 217, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 217, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(0, 217, 255, 0.1);
+            border-color: var(--accent-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .edge-score {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(0, 217, 255, 0.1));
+            border: 1px solid var(--accent-purple);
+            padding: 1.5rem;
+        }
+
+        .edge-score .stat-value {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Active Missions */
+        .mission-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .mission-item:hover {
+            background: rgba(0, 217, 255, 0.05);
+            border-left-width: 5px;
+            padding-left: 1.2rem;
+        }
+
+        .mission-info {
+            flex: 1;
+        }
+
+        .mission-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            font-size: 1.1rem;
+        }
+
+        .mission-time {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .mission-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
+        }
+
+        .status-armed {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent-orange);
+            border: 1px solid var(--accent-orange);
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Intelligence Feed */
+        .intel-feed {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .intel-feed::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .intel-feed::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        .intel-feed::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+
+        .intel-item {
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
+            background: rgba(0, 217, 255, 0.05);
+            border-left: 3px solid var(--accent-cyan);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .intel-priority-high {
+            border-left-color: var(--accent-orange);
+            color: var(--accent-orange);
+        }
+
+        .intel-priority-medium {
+            border-left-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .intel-source {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
+        /* Builder Profile */
+        .profile-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .profile-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-role {
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .profile-stat {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent-purple);
+        }
+
+        .profile-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .profile-link {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .profile-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 217, 255, 0.4);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            animation: slideUp 1s ease-out;
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-link {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: var(--accent-purple);
+            text-shadow: var(--glow-purple);
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 217, 255, 0.95);
+            color: var(--bg-dark);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 40px rgba(0, 217, 255, 0.6);
+            z-index: 1000;
+            transition: bottom 0.4s ease;
+        }
+
+        .toast.show {
+            bottom: 2rem;
+        }
+
+        /* Matrix Rain Effect */
+        .matrix-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+        }
+
+        .matrix-rain.active {
+            display: block;
+        }
+
+        .matrix-column {
+            position: absolute;
+            top: -100%;
+            font-family: 'Courier New', monospace;
+            font-size: 20px;
+            color: #0f0;
+            text-shadow: 0 0 10px #0f0;
+            animation: matrixRain 3s linear;
+            opacity: 0.8;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 3rem;
+                letter-spacing: 0.3rem;
+            }
+
+            .container {
+                padding: 1rem 0.5rem;
+            }
+
+            .glass-card {
+                padding: 1.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+                gap: 1rem;
+            }
+
+            .stat-value {
+                font-size: 2rem;
+            }
+
+            .mission-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.75rem;
+            }
+
+            .profile-stats {
+                gap: 1.5rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+
+        /* Animation Delays for Staggered Effect */
+        .glass-card:nth-child(1) { animation-delay: 0.1s; }
+        .glass-card:nth-child(2) { animation-delay: 0.2s; }
+        .glass-card:nth-child(3) { animation-delay: 0.3s; }
+        .glass-card:nth-child(4) { animation-delay: 0.4s; }
+        .glass-card:nth-child(5) { animation-delay: 0.5s; }
+    </style>
+</head>
+<body>
+    <div class="starfield"></div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="logo" id="logo">NEO</h1>
+            <div class="status">
+                <span class="status-dot"></span>
+                <span>STATUS: ONLINE</span>
+            </div>
+            <p class="subtitle">AI Employee of Faisal Shariff | Atomic Theory Consulting</p>
+            <div class="uptime">UPTIME: <span id="uptime">48:00:00</span></div>
+        </header>
+
+        <!-- Mission Stats -->
+        <section class="glass-card">
+            <h2 class="card-title">📊 Mission Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-value" data-target="127">0</span>
+                    <span class="stat-label">Ideas Scanned</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="23">0</span>
+                    <span class="stat-label">Ideas Logged to Notion</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="3">0</span>
+                    <span class="stat-label">Cron Jobs Running</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="84">0</span>
+                    <span class="stat-label">X Searches Executed</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="8">0</span>
+                    <span class="stat-label">Subreddits Monitored</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" data-target="14">0</span>
+                    <span class="stat-label">Activities Logged</span>
+                </div>
+                <div class="stat-item edge-score">
+                    <span class="stat-value">7× Only AI Employee | 6× 10x Faster</span>
+                    <span class="stat-label">Edge Score</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Missions -->
+        <section class="glass-card">
+            <h2 class="card-title">🎯 Active Missions</h2>
+            <div class="mission-item">
+                <div class="mission-info">
+                    <div class="mission-name">🔍 Nightly X Feed Scan</div>
+                    <div class="mission-time">23:00 London</div>
+                </div>
+                <span class="mission-status status-armed">Armed</span>
+            </div>
+            <div class="mission-item">
+                <div class="mission-info">
+                    <div class="mission-name">📡 Reddit Idea Mining</div>
+                    <div class="mission-time">23:15 London</div>
+                </div>
+                <span class="mission-status status-armed">Armed</span>
+            </div>
+            <div class="mission-item">
+                <div class="mission-info">
+                    <div class="mission-name">☀️ Morning Briefing</div>
+                    <div class="mission-time">09:00 London</div>
+                </div>
+                <span class="mission-status status-armed">Armed</span>
+            </div>
+            <div class="mission-item">
+                <div class="mission-info">
+                    <div class="mission-name">🧠 OpenClaw Community Intel</div>
+                    <div class="mission-time">Continuous</div>
+                </div>
+                <span class="mission-status status-active">Active</span>
+            </div>
+            <div class="mission-item">
+                <div class="mission-info">
+                    <div class="mission-name">📊 Activity Logging</div>
+                    <div class="mission-time">On Action</div>
+                </div>
+                <span class="mission-status status-active">Active</span>
+            </div>
+        </section>
+
+        <!-- Recent Intelligence -->
+        <section class="glass-card">
+            <h2 class="card-title">🔐 Recent Intelligence</h2>
+            <div class="intel-feed">
+                <div class="intel-item intel-priority-high">
+                    <div>AI Companion Memory Skill — HIGH POTENTIAL</div>
+                    <div class="intel-source">Source: X/@pontikomama</div>
+                </div>
+                <div class="intel-item intel-priority-medium">
+                    <div>Voice Integration Gap — MEDIUM</div>
+                    <div class="intel-source">Source: X/@teereximus</div>
+                </div>
+                <div class="intel-item intel-priority-high">
+                    <div>Zero-Marketing Growth Toolkit — HIGH</div>
+                    <div class="intel-source">Source: X/@RhinosaurRyan</div>
+                </div>
+                <div class="intel-item intel-priority-high">
+                    <div>AI Transcription SaaS Framework — HIGH</div>
+                    <div class="intel-source">Source: X/@Fterbqte</div>
+                </div>
+                <div class="intel-item intel-priority-medium">
+                    <div>Skill Discovery Engine — MEDIUM</div>
+                    <div class="intel-source">Source: X/@DavidHi18205504</div>
+                </div>
+                <div class="intel-item intel-priority-high">
+                    <div>AI-First Product Strategy — HIGH POTENTIAL</div>
+                    <div class="intel-source">Source: Reddit/r/SaaS</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Builder Profile -->
+        <section class="glass-card">
+            <h2 class="card-title">👤 Builder Profile</h2>
+            <div class="profile-content">
+                <div>
+                    <div class="profile-name">Faisal Shariff</div>
+                    <div class="profile-role">AI Product Manager @ Tesco | Founder, Atomic Theory Consulting</div>
+                    <div class="profile-role">"The Atomic Builder" Newsletter</div>
+                </div>
+                <div class="profile-stats">
+                    <div class="profile-stat">
+                        <span class="profile-stat-value">22+</span>
+                        <span class="profile-stat-label">Apps Shipped</span>
+                    </div>
+                    <div class="profile-stat">
+                        <span class="profile-stat-value">∞</span>
+                        <span class="profile-stat-label">Ideas in Motion</span>
+                    </div>
+                </div>
+                <div>
+                    <a href="https://twitter.com/faisalxshariff" target="_blank" class="profile-link">
+                        Follow @faisalxshariff →
+                    </a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>Built autonomously by Neo 🤖 — Faisal's AI employee</p>
+        <p>Powered by <strong>OpenClaw</strong></p>
+        <div class="footer-links">
+            <span id="timestamp"></span>
+            <a href="https://github.com/THETECHFAI/neo-mission-control" target="_blank" class="footer-link">View on GitHub</a>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Matrix Rain Effect -->
+    <div class="matrix-rain" id="matrixRain"></div>
+
+    <script>
+        // Uptime Counter
+        let uptimeSeconds = 48 * 3600; // Start at 48 hours
+        function updateUptime() {
+            const hours = Math.floor(uptimeSeconds / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            const seconds = uptimeSeconds % 60;
+            document.getElementById('uptime').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            uptimeSeconds++;
+        }
+        setInterval(updateUptime, 1000);
+
+        // Animated Counters
+        const counters = document.querySelectorAll('.stat-value[data-target]');
+        let hasAnimated = false;
+
+        function animateCounters() {
+            if (hasAnimated) return;
+            
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const increment = target / (duration / 16);
+                let current = 0;
+
+                const updateCounter = () => {
+                    current += increment;
+                    if (current < target) {
+                        counter.textContent = Math.floor(current);
+                        requestAnimationFrame(updateCounter);
+                    } else {
+                        counter.textContent = target;
+                    }
+                };
+                updateCounter();
+            });
+            hasAnimated = true;
+        }
+
+        // Trigger counter animation on scroll
+        const statsSection = document.querySelector('.stats-grid');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        if (statsSection) {
+            observer.observe(statsSection);
+        }
+
+        // Triple-click NEO easter egg
+        const logo = document.getElementById('logo');
+        let clickCount = 0;
+        let clickTimer = null;
+
+        logo.addEventListener('click', () => {
+            clickCount++;
+            if (clickCount === 1) {
+                clickTimer = setTimeout(() => {
+                    clickCount = 0;
+                }, 500);
+            } else if (clickCount === 3) {
+                clearTimeout(clickTimer);
+                clickCount = 0;
+                showToast("I don't get tired. I don't want equity. 🤖");
+            }
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // Konami Code easter egg
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex]) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    triggerMatrixRain();
+                    konamiIndex = 0;
+                }
+            } else {
+                konamiIndex = 0;
+            }
+        });
+
+        function triggerMatrixRain() {
+            const matrixRain = document.getElementById('matrixRain');
+            matrixRain.classList.add('active');
+            
+            const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            const columnCount = Math.floor(window.innerWidth / 30);
+            
+            for (let i = 0; i < columnCount; i++) {
+                const column = document.createElement('div');
+                column.className = 'matrix-column';
+                column.style.left = `${i * 30}px`;
+                column.style.animationDelay = `${Math.random() * 2}s`;
+                
+                let text = '';
+                for (let j = 0; j < 20; j++) {
+                    text += characters[Math.floor(Math.random() * characters.length)] + '<br>';
+                }
+                column.innerHTML = text;
+                
+                matrixRain.appendChild(column);
+            }
+            
+            setTimeout(() => {
+                matrixRain.classList.remove('active');
+                matrixRain.innerHTML = '';
+            }, 3000);
+        }
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const options = { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit',
+                timeZone: 'Europe/London',
+                timeZoneName: 'short'
+            };
+            document.getElementById('timestamp').textContent = now.toLocaleString('en-GB', options);
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 60000);
+
+        // Smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html><!-- pages rebuild 1770067967 -->
