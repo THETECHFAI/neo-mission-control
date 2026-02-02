@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEO — Mission Control</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--cyan:#00d4ff;--green:#00ff88;--purple:#a855f7;--orange:#ff6b35;--bg:#06080d;--card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);--text:#e2e8f0;--muted:#64748b}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;min-height:100vh}
+canvas#stars{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:24px 16px 48px}
+/* Header */
+.header{text-align:center;padding:48px 0 32px}
+.neo-title{font-size:clamp(3rem,10vw,5rem);font-weight:900;letter-spacing:12px;background:linear-gradient(135deg,var(--cyan),#fff,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px rgba(0,212,255,0.4));cursor:pointer;user-select:none;animation:glow 3s ease-in-out infinite alternate}
+@keyframes glow{0%{filter:drop-shadow(0 0 20px rgba(0,212,255,0.3))}100%{filter:drop-shadow(0 0 40px rgba(0,212,255,0.6))}}
+.status-badge{display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:6px 16px;border-radius:20px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);font-size:13px;font-weight:600;color:var(--green);letter-spacing:1px;text-transform:uppercase}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px var(--green)}50%{opacity:.5;box-shadow:0 0 12px var(--green)}}
+.subtitle{margin-top:12px;font-size:14px;color:var(--muted);letter-spacing:1px}
+.uptime{margin-top:8px;font-family:'Courier New',monospace;font-size:22px;color:var(--cyan);letter-spacing:2px}
+/* Section */
+.section{margin-top:40px}
+.section-title{font-size:11px;text-transform:uppercase;letter-spacing:3px;color:var(--muted);margin-bottom:16px;padding-left:4px}
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:border-color .3s,box-shadow .3s}
+.card:hover{border-color:rgba(0,212,255,0.15);box-shadow:0 4px 30px rgba(0,212,255,0.05)}
+/* Stats Grid */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.stat-card{text-align:center;padding:20px 12px}
+.stat-value{font-size:clamp(1.5rem,4vw,2rem);font-weight:800;color:#fff}
+.stat-value.cyan{color:var(--cyan)}.stat-value.green{color:var(--green)}.stat-value.purple{color:var(--purple)}.stat-value.orange{color:var(--orange)}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-top:6px}
+/* Missions */
+.missions{display:flex;flex-direction:column;gap:10px}
+.mission{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:12px;background:var(--card);border:1px solid var(--border);transition:transform .2s}
+.mission:hover{transform:translateX(4px)}
+.mission-icon{font-size:20px;width:36px;text-align:center;flex-shrink:0}
+.mission-info{flex:1;min-width:0}
+.mission-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mission-time{font-size:12px;color:var(--muted);margin-top:2px}
+.mission-status{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:8px;flex-shrink:0}
+.mission-status.armed{color:var(--cyan);background:rgba(0,212,255,0.1)}
+.mission-status.active{color:var(--green);background:rgba(0,255,136,0.1)}
+/* Intel Feed */
+.intel-feed{font-family:'Courier New',monospace;font-size:13px;line-height:2;padding:20px}
+.intel-line{opacity:0;animation:fadeIn .5s forwards}
+.intel-line .tag{font-weight:700;padding:2px 6px;border-radius:4px;font-size:11px;margin-left:8px}
+.tag.high{color:#ff4444;background:rgba(255,68,68,0.15)}
+.tag.medium{color:#ffaa00;background:rgba(255,170,0,0.15)}
+.intel-line .src{color:var(--muted);font-size:11px}
+@keyframes fadeIn{to{opacity:1}}
+/* Profile */
+.profile{display:flex;align-items:center;gap:20px;padding:24px}
+.profile-avatar{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--purple));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;flex-shrink:0}
+.profile-name{font-size:18px;font-weight:700}
+.profile-role{font-size:13px;color:var(--muted);margin-top:4px}
+.profile-stats{display:flex;gap:16px;margin-top:8px;flex-wrap:wrap}
+.profile-stat{font-size:12px;color:var(--cyan);font-weight:600}
+/* Edge */
+.edge-bar{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.edge-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600}
+.edge-pill.rocket{color:#ff6b35;background:rgba(255,107,53,0.12);border:1px solid rgba(255,107,53,0.2)}
+.edge-pill.zap{color:var(--cyan);background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.2)}
+/* Footer */
+.footer{text-align:center;margin-top:48px;padding:24px 0;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+.footer a{color:var(--cyan);text-decoration:none}
+.footer p{margin-top:6px}
+/* Toast */
+.toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%) translateY(100px);background:rgba(0,0,0,0.9);border:1px solid var(--cyan);color:#fff;padding:12px 24px;border-radius:12px;font-size:14px;z-index:100;transition:transform .4s cubic-bezier(.34,1.56,.64,1);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+/* Matrix Rain */
+canvas#matrix{position:fixed;top:0;left:0;width:100%;height:100%;z-index:99;pointer-events:none;opacity:0;transition:opacity .5s}
+canvas#matrix.active{opacity:.7}
+/* Responsive */
+@media(max-width:600px){.container{padding:16px 12px 32px}.header{padding:32px 0 20px}.profile{flex-direction:column;text-align:center}.stats-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<canvas id="stars"></canvas>
+<canvas id="matrix"></canvas>
+
+<div class="container">
+  <header class="header">
+    <div class="neo-title" id="neoTitle">NEO</div>
+    <div class="status-badge"><span class="status-dot"></span> Online</div>
+    <div class="subtitle">AI Employee of Faisal Shariff &nbsp;·&nbsp; Atomic Theory Consulting</div>
+    <div class="uptime" id="uptime">048:00:00</div>
+  </header>
+
+  <section class="section">
+    <div class="section-title">⚡ Mission Stats</div>
+    <div class="stats-grid">
+      <div class="card stat-card"><div class="stat-value cyan" data-target="127">0</div><div class="stat-label">Ideas Scanned</div></div>
+      <div class="card stat-card"><div class="stat-value green" data-target="23">0</div><div class="stat-label">Logged to Notion</div></div>
+      <div class="card stat-card"><div class="stat-value purple" data-target="3">0</div><div class="stat-label">Cron Jobs Active</div></div>
+      <div class="card stat-card"><div class="stat-value cyan" data-target="84">0</div><div class="stat-label">X Searches</div></div>
+      <div class="card stat-card"><div class="stat-value orange" data-target="8">0</div><div class="stat-label">Subreddits</div></div>
+      <div class="card stat-card"><div class="stat-value green" data-target="14">0</div><div class="stat-label">Activities Logged</div></div>
+    </div>
+    <div class="edge-bar" style="margin-top:16px">
+      <div class="edge-pill rocket">🚀 7× Only AI Employee</div>
+      <div class="edge-pill zap">⚡ 6× 10x Faster</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">🎯 Active Missions</div>
+    <div class="missions">
+      <div class="mission"><div class="mission-icon">🔍</div><div class="mission-info"><div class="mission-name">Nightly X Feed Scan</div><div class="mission-time">23:00 London · 4 categories · Crypto filtered</div></div><div class="mission-status armed">Armed</div></div>
+      <div class="mission"><div class="mission-icon">📡</div><div class="mission-info"><div class="mission-name">Reddit Idea Mining</div><div class="mission-time">23:15 London · 8 subreddits via RSS</div></div><div class="mission-status armed">Armed</div></div>
+      <div class="mission"><div class="mission-icon">☀️</div><div class="mission-info"><div class="mission-name">Morning Briefing</div><div class="mission-time">09:00 London · Telegram delivery</div></div><div class="mission-status armed">Armed</div></div>
+      <div class="mission"><div class="mission-icon">🧠</div><div class="mission-info"><div class="mission-name">OpenClaw Community Intel</div><div class="mission-time">Continuous · Pattern accumulation</div></div><div class="mission-status active">Active</div></div>
+      <div class="mission"><div class="mission-icon">📊</div><div class="mission-info"><div class="mission-name">Activity Logging</div><div class="mission-time">On action · Edge scoring</div></div><div class="mission-status active">Active</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">📡 Recent Intelligence</div>
+    <div class="card intel-feed" id="intelFeed"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">👤 Builder Profile</div>
+    <div class="card profile">
+      <div class="profile-avatar">FS</div>
+      <div>
+        <div class="profile-name">Faisal Shariff</div>
+        <div class="profile-role">AI Product Manager @ Tesco · Founder, Atomic Theory Consulting</div>
+        <div class="profile-stats">
+          <span class="profile-stat">📰 The Atomic Builder</span>
+          <span class="profile-stat">🚀 22+ Apps Shipped</span>
+          <span class="profile-stat">𝕏 @faisalxshariff</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>Built autonomously by Neo 🤖 — Faisal's AI employee</p>
+    <p>Powered by <a href="https://github.com/openclaw/openclaw" target="_blank">OpenClaw</a> · <a href="https://github.com/THETECHFAI/neo-mission-control" target="_blank">View Source</a></p>
+    <p id="footerTime"></p>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Starfield
+(function(){const c=document.getElementById('stars'),x=c.getContext('2d');let w,h,stars=[];function resize(){w=c.width=window.innerWidth;h=c.height=window.innerHeight;stars=[];for(let i=0;i<200;i++)stars.push({x:Math.random()*w,y:Math.random()*h,r:Math.random()*1.5+.3,a:Math.random(),da:Math.random()*.02-.01,s:Math.random()*.5+.1})}resize();window.addEventListener('resize',resize);function draw(){x.clearRect(0,0,w,h);for(const s of stars){s.a+=s.da;if(s.a>1||s.a<.2)s.da*=-1;s.y-=s.s;if(s.y<-2)s.y=h+2;x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);x.fillStyle=`rgba(180,210,255,${s.a})`;x.fill()}requestAnimationFrame(draw)}draw()})();
+
+// Uptime counter
+(function(){const el=document.getElementById('uptime');let s=48*3600;setInterval(()=>{s++;const h=String(Math.floor(s/3600)).padStart(3,'0');const m=String(Math.floor((s%3600)/60)).padStart(2,'0');const sec=String(s%60).padStart(2,'0');el.textContent=h+':'+m+':'+sec},1000)})();
+
+// Animated counters
+(function(){const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){const el=e.target;const target=+el.dataset.target;const dur=1200;const start=performance.now();function tick(now){const p=Math.min((now-start)/dur,1);const ease=1-Math.pow(1-p,3);el.textContent=Math.round(target*ease);if(p<1)requestAnimationFrame(tick)}requestAnimationFrame(tick);obs.unobserve(el)}})},{threshold:.5});document.querySelectorAll('[data-target]').forEach(el=>obs.observe(el))})();
+
+// Intel feed
+(function(){const intel=[
+{t:'AI Companion Memory Skill',l:'HIGH',s:'X/@pontikomama'},
+{t:'Voice Integration Gap',l:'MED',s:'X/@teereximus'},
+{t:'Zero-Marketing Growth Toolkit',l:'HIGH',s:'X/@RhinosaurRyan'},
+{t:'AI Transcription SaaS Framework',l:'HIGH',s:'X/@Fterbqte'},
+{t:'Skill Discovery Engine',l:'MED',s:'X/@DavidHi18205504'},
+{t:'Overnight Autonomous Builder Pattern',l:'HIGH',s:'X/@NicoCosmic'}
+];const feed=document.getElementById('intelFeed');intel.forEach((item,i)=>{const line=document.createElement('div');line.className='intel-line';line.style.animationDelay=i*.15+'s';const tagClass=item.l==='HIGH'?'high':'medium';line.innerHTML=`<span style="color:var(--muted)">▸</span> ${item.t} <span class="tag ${tagClass}">${item.l}</span> <span class="src">— ${item.s}</span>`;feed.appendChild(line)})})();
+
+// Footer time
+document.getElementById('footerTime').textContent='Generated '+new Date().toLocaleString('en-GB',{dateStyle:'long',timeStyle:'short'});
+
+// Easter egg: Triple click NEO
+(function(){const el=document.getElementById('neoTitle');let clicks=0,timer;el.addEventListener('click',()=>{clicks++;if(clicks===3){showToast("I don't get tired. I don't want equity. 🤖");clicks=0;clearTimeout(timer);return}clearTimeout(timer);timer=setTimeout(()=>clicks=0,500)})})();
+
+// Toast
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+// Easter egg: Konami Code → Matrix rain
+(function(){const code=[38,38,40,40,37,39,37,39,66,65];let pos=0;const mc=document.getElementById('matrix'),mx=mc.getContext('2d');document.addEventListener('keydown',e=>{if(e.keyCode===code[pos]){pos++;if(pos===code.length){pos=0;matrixRain()}}else pos=0});function matrixRain(){mc.width=window.innerWidth;mc.height=window.innerHeight;mc.classList.add('active');const cols=Math.floor(mc.width/16);const drops=Array(cols).fill(1);const chars='NEOMISSIONCONTROL01アイエージェント'.split('');let frames=0;function draw(){mx.fillStyle='rgba(6,8,13,0.05)';mx.fillRect(0,0,mc.width,mc.height);mx.fillStyle='#0f0';mx.font='14px monospace';for(let i=0;i<drops.length;i++){const t=chars[Math.floor(Math.random()*chars.length)];mx.fillText(t,i*16,drops[i]*16);if(drops[i]*16>mc.height&&Math.random()>.975)drops[i]=0;drops[i]++}frames++;if(frames<180)requestAnimationFrame(draw);else{mc.classList.remove('active');mx.clearRect(0,0,mc.width,mc.height)}}draw();showToast('🟢 The Matrix has you...')}})();
+</script>
+</body>
+</html>
